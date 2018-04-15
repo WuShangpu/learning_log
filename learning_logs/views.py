@@ -39,7 +39,9 @@ def new_topic(request):
 		#POST提交的数据，对数据进行处理
 		form = TopicForm(request.POST)
 		if form.is_valid():
-			form.save()
+			new_topic = form.save(commit = False)
+			new_topic.owner = request.user
+			new_topic.save()
 			return HttpResponseRedirect(reverse('learning_logs:topics'))
 	context = {'form': form}
 	return render(request, 'learning_logs/new_topic.html', context)	
@@ -67,6 +69,9 @@ def edit_entry(request, entry_id):
 	#编辑既有条目
 	entry = Entry.objects.get(id = entry_id)
 	topic = entry.topic
+	if topic.owner != request.user:
+		raise Http404
+		
 	if request.method != 'POST':
 		#初次请求，使用当前条目填充表单
 		form = EntryForm(instance=entry)
